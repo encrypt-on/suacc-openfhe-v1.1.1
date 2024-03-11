@@ -1,0 +1,4 @@
+--ignore-directory=is:third-party
+--ignore-directory=is:bbuild
+--ignore-directory=is:logs
+--ignore-directory=is:dox

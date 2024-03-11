@@ -1,7 +1,7 @@
 //==================================================================================
 // BSD 2-Clause License
 //
-// Copyright (c) 2014-2022, NJIT, Duality Technologies Inc. and other contributors
+// Copyright (c) 2014-2023, NJIT, Duality Technologies Inc. and other contributors
 //
 // All rights reserved.
 //
@@ -32,10 +32,27 @@
 #ifndef __NATIVEINTBACKEND_H__
 #define __NATIVEINTBACKEND_H__
 
+#include "config_core.h"
 #include "math/hal/basicint.h"
-#include "math/hal/intnat/ubintnat.h"
-#include "math/hal/intnat/mubintvecnat.h"
-#include "math/hal/intnat/transformnat.h"
+
+#ifdef WITH_INTEL_HEXL
+
+    #include "math/hal/intnat-hexl/ubintnathexl.h"
+    #include "math/hal/intnat-hexl/mubintvecnathexl.h"
+    #include "math/hal/intnat-hexl/transformnathexl.h"
+
+namespace lbcrypto {
+
+using NativeInteger = intnathexl::NativeInteger;
+using NativeVector  = intnathexl::NativeVector;
+
+}  // namespace lbcrypto
+
+#else
+
+    #include "math/hal/intnat/ubintnat.h"
+    #include "math/hal/intnat/mubintvecnat.h"
+    #include "math/hal/intnat/transformnat.h"
 
 namespace lbcrypto {
 
@@ -43,6 +60,8 @@ using NativeInteger = intnat::NativeInteger;
 using NativeVector  = intnat::NativeVector;
 
 }  // namespace lbcrypto
+
+#endif
 
 using NativeInteger = lbcrypto::NativeInteger;
 using NativeVector  = lbcrypto::NativeVector;

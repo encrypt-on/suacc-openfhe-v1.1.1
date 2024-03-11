@@ -11,6 +11,10 @@ else()
 	set( WARNING_FLAG -Wno-unused-but-set-variable )
 endif()
 
+if(WITH_SU_GPU_NTT)
+	set(THIRDPARTYLIBS ${THIRDPARTYLIBS} ${LIB_SU_GPU_NTT} ${LIB_SU_GPU_NTT_DEPS})
+endif()
+
 if( BUILD_SHARED )
 	set (BMLIBS PUBLIC OPENFHEpke PUBLIC OPENFHEbinfhe PUBLIC OPENFHEcore ${THIRDPARTYLIBS} PUBLIC benchmark ${OpenMP_CXX_FLAGS})
 endif()
@@ -28,7 +32,7 @@ foreach (app ${BMARK_SRC_FILES})
 	target_include_directories( ${exe} PUBLIC ../third-party/google-benchmark/include )
 	set_target_properties( ${exe} PROPERTIES COMPILE_FLAGS
 		"${REGEX_FLAG} -DHAVE_STEADY_CLOCK -DNDEBUG ${WARNING_FLAG}" )
-	target_link_libraries ( ${exe} ${BMLIBS} )
+	target_link_libraries ( ${exe} ${BMLIBS})
 	set (BMAPPS ${BMAPPS} ${exe})
 endforeach()
 

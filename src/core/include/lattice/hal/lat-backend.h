@@ -29,12 +29,55 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //==================================================================================
 
-/*
-  Defines aliases for the lattice default backend
- */
-
 #ifndef LBCRYPTO_INC_LATTICE_HAL_LAT_BACKEND_H
 #define LBCRYPTO_INC_LATTICE_HAL_LAT_BACKEND_H
+
+#include "config_core.h"
+#ifdef WITH_INTEL_HEXL
+
+#define POLY_IMPLEMENTATION     "lattice/hal/hexl/hexlpoly-impl.h"
+#define DCRTPOLY_IMPLEMENTATION "lattice/hal/hexl/hexldcrtpoly-impl.h"
+
+#define MAKE_POLY_TYPE(T)     template class HexlPolyImpl<T>;
+#define MAKE_DCRTPOLY_TYPE(T) template class HexlDCRTPolyImpl<T>;
+
+#include "lattice/hal/hexl/hexlpoly.h"
+#include "lattice/hal/hexl/hexldcrtpoly.h"
+
+namespace lbcrypto {
+
+using Poly       = HexlPolyImpl<BigVector>;
+using NativePoly = HexlPolyImpl<NativeVector>;
+// using NativePoly64 = NativePoly;
+using DCRTPoly = HexlDCRTPolyImpl<BigVector>;
+
+#ifdef WITH_BE2
+using M2Poly     = HexlPolyImpl<M2Vector>;
+using M2DCRTPoly = HexlDCRTPolyImpl<M2Vector>;
+#else
+using M2Poly     = void;
+using M2DCRTPoly = void;
+#endif
+
+#ifdef WITH_BE4
+using M4Poly     = HexlPolyImpl<M4Vector>;
+using M4DCRTPoly = HexlDCRTPolyImpl<M4Vector>;
+#else
+using M4Poly     = void;
+using M4DCRTPoly = void;
+#endif
+
+#ifdef WITH_NTL
+using M6Poly     = HexlPolyImpl<M6Vector>;
+using M6DCRTPoly = HexlDCRTPolyImpl<M6Vector>;
+#else
+using M6Poly     = void;
+using M6DCRTPoly = void;
+#endif
+
+}  // namespace lbcrypto
+
+#else
 
 #define POLY_IMPLEMENTATION     "lattice/hal/default/poly-impl.h"
 #define DCRTPOLY_IMPLEMENTATION "lattice/hal/default/dcrtpoly-impl.h"
@@ -77,5 +120,7 @@ using M6DCRTPoly = void;
 #endif
 
 }  // namespace lbcrypto
+
+#endif
 
 #endif

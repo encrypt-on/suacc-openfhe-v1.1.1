@@ -71,3 +71,13 @@ test_detail.xml
 
 # Visual Studio Code
 .vscode
+logs/*.log
+bbuild/*
+*.code-workspace
+*.txt.user
+docs/dox/*
+*.pdf
+logs/misc/deps-nogpuntt.pdf logs/misc/deps.pdf logs/misc/Screenshot from 2024-01-11 16-28-03.png logs/misc/simple-deps.gpuntt.dot logs/misc/simple-deps.gpuntt.pdf logs/misc/simple-deps.nogpuntt.dot logs/misc/targetdeps.pdf
+logs/*.png
+logs/**/*.png
+logs/rel/

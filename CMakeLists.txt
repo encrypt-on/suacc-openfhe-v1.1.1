@@ -23,7 +23,7 @@ endif()
 ##endif()
 ### TODO: for now, we use CLang for Mac
 
-project (OpenFHE C CXX)
+project (OpenFHE C CXX CUDA)
 
 set(OPENFHE_VERSION_MAJOR 1)
 set(OPENFHE_VERSION_MINOR 1)
@@ -68,16 +68,19 @@ else()
     option( WITH_OPENMP "Use OpenMP to enable <omp.h>"                               ON  )
 endif()
 
-option( BUILD_EXTRAS "Set to ON to build extras for the library"                     OFF )
-option( GIT_SUBMOD_AUTO "Submodules auto-update"                                     ON  )
-option( WITH_BE2 "Include MATHBACKEND 2 in build by setting WITH_BE2 to ON"          OFF )
-option( WITH_BE4 "Include MATHBACKEND 4 in build by setting WITH_BE4 to ON"          OFF )
-option( WITH_NTL "Include MATHBACKEND 6 and NTL in build by setting WITH_NTL to ON"  OFF )
-option( WITH_TCM "Activate tcmalloc by setting WITH_TCM to ON"                       OFF )
-option( WITH_NATIVEOPT "Use machine-specific optimizations"                          OFF )
-option( WITH_COVTEST "Turn on to enable coverage testing"                            OFF )
+option( BUILD_EXTRAS "Set to ON to build extras for the library"                       ON )
+option( GIT_SUBMOD_AUTO "Submodules auto-update"                                       OFF )
+option( WITH_BE2 "Include MATHBACKEND 2 in build by setting WITH_BE2 to ON"            OFF )
+option( WITH_BE4 "Include MATHBACKEND 4 in build by setting WITH_BE4 to ON"            OFF )
+option( WITH_NTL "Include MATHBACKEND 6 and NTL in build by setting WITH_NTL to ON"    OFF )
+option( WITH_TCM "Activate tcmalloc by setting WITH_TCM to ON"                         OFF )
+option( WITH_NATIVEOPT "Use machine-specific optimizations"                            ON  )
+option( WITH_COVTEST "Turn on to enable coverage testing"                              OFF )
 option( WITH_NOISE_DEBUG "Use only when running lattice estimator; not for production" OFF )
-option( USE_MACPORTS "Use MacPorts installed packages"                               OFF )
+option( USE_MACPORTS "Use MacPorts installed packages"                                 OFF )
+option( WITH_INTEL_HEXL "Use Intel HEXL library"                                       ON  )
+option( INTEL_HEXL_PREBUILT "Specify if Intel HEXL library was prebuilt"               OFF )
+option( WITH_SU_GPU_NTT "Use SU GPU-NTT library"                                       OFF  )
 
 # Set required number of bits for native integer in build by setting NATIVE_SIZE to 64 or 128
 if( NOT NATIVE_SIZE )
@@ -88,25 +91,34 @@ if( NOT CKKS_M_FACTOR )
     set( CKKS_M_FACTOR 1 )
 endif()
 
+if( NOT INTEL_HEXL_HINT_DIR )
+    set(INTEL_HEXL_HINT_DIR "${CMAKE_INSTALL_PREFIX}")
+endif()
+
+
 ### Print options
-message( STATUS "BUILD_UNITTESTS:  ${BUILD_UNITTESTS}")
-message( STATUS "BUILD_EXAMPLES:   ${BUILD_EXAMPLES}")
-message( STATUS "BUILD_BENCHMARKS: ${BUILD_BENCHMARKS}")
-message( STATUS "BUILD_EXTRAS:     ${BUILD_EXTRAS}")
-message( STATUS "BUILD_STATIC:     ${BUILD_STATIC}")
-message( STATUS "BUILD_SHARED:     ${BUILD_SHARED}")
-message( STATUS "GIT_SUBMOD_AUTO:  ${GIT_SUBMOD_AUTO}")
-message( STATUS "WITH_BE2:         ${WITH_BE2}")
-message( STATUS "WITH_BE4:         ${WITH_BE4}")
-message( STATUS "WITH_NTL:         ${WITH_NTL}")
-message( STATUS "WITH_TCM:         ${WITH_TCM}")
-message( STATUS "WITH_OPENMP:      ${WITH_OPENMP}")
-message( STATUS "NATIVE_SIZE:      ${NATIVE_SIZE}")
-message( STATUS "CKKS_M_FACTOR:    ${CKKS_M_FACTOR}")
-message( STATUS "WITH_NATIVEOPT:   ${WITH_NATIVEOPT}")
-message( STATUS "WITH_COVTEST:     ${WITH_COVTEST}")
-message( STATUS "WITH_NOISE_DEBUG: ${WITH_NOISE_DEBUG}")
-message( STATUS "USE_MACPORTS:     ${USE_MACPORTS}")
+message( STATUS "BUILD_UNITTESTS:     ${BUILD_UNITTESTS}")
+message( STATUS "BUILD_EXAMPLES:      ${BUILD_EXAMPLES}")
+message( STATUS "BUILD_BENCHMARKS:    ${BUILD_BENCHMARKS}")
+message( STATUS "BUILD_EXTRAS:        ${BUILD_EXTRAS}")
+message( STATUS "BUILD_STATIC:        ${BUILD_STATIC}")
+message( STATUS "BUILD_SHARED:        ${BUILD_SHARED}")
+message( STATUS "GIT_SUBMOD_AUTO:     ${GIT_SUBMOD_AUTO}")
+message( STATUS "WITH_BE2:            ${WITH_BE2}")
+message( STATUS "WITH_BE4:            ${WITH_BE4}")
+message( STATUS "WITH_NTL:            ${WITH_NTL}")
+message( STATUS "WITH_TCM:            ${WITH_TCM}")
+message( STATUS "WITH_OPENMP:         ${WITH_OPENMP}")
+message( STATUS "NATIVE_SIZE:         ${NATIVE_SIZE}")
+message( STATUS "CKKS_M_FACTOR:       ${CKKS_M_FACTOR}")
+message( STATUS "WITH_NATIVEOPT:      ${WITH_NATIVEOPT}")
+message( STATUS "WITH_COVTEST:        ${WITH_COVTEST}")
+message( STATUS "WITH_NOISE_DEBUG:    ${WITH_NOISE_DEBUG}")
+message( STATUS "USE_MACPORTS:        ${USE_MACPORTS}")
+message( STATUS "WITH_INTEL_HEXL:     ${WITH_INTEL_HEXL}")
+message( STATUS "INTEL_HEXL_PREBUILT: ${INTEL_HEXL_PREBUILT}")
+message( STATUS "INTEL_HEXL_HINT_DIR: ${INTEL_HEXL_HINT_DIR}")
+message( STATUS "WITH_SU_GPU_NTT:     ${WITH_SU_GPU_NTT}")
 
 #--------------------------------------------------------------------
 # Compiler logic
@@ -532,6 +544,64 @@ include (ExternalProject)
 set( THIRDPARTYDIR ${CMAKE_CURRENT_SOURCE_DIR}/third-party )
 include_directories( ${THIRDPARTYDIR}/include )
 
+if (WITH_INTEL_HEXL)
+    include(third-party/intel-hexl/intel-hexl.cmake)
+endif()
+
+#=== [SU_GPU_NTT] specific stuff ===
+
+if (WITH_SU_GPU_NTT)
+
+    set(CMAKE_VERBOSE_MAKEFILE ON) #704:: added to aid debugging
+
+    find_package(CUDA REQUIRED)
+    set(CMAKE_CUDA_STANDARD 17)
+
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 86)
+    endif()
+
+    add_definitions(-DENB_SUGPUNTT) # control cpp conditional compilations
+    
+    set(SU_EXPERIMENTS OFF) # turn on/off to activate code for experiment facilitation
+    if(SU_EXPERIMENTS)
+        add_definitions(-DENB_ELAPSED_TIME_MEASUREMENT) # enable/disable
+        add_definitions(-DENB_COUTPRINT) # enable/disable embedded cout's
+        add_definitions(-DEXERCISE_RSZ16) # enable this with extreme caution!
+    endif()
+
+    add_subdirectory(third-party/suacc/gpu)
+    include_directories(third-party/suacc/gpu/src/)
+
+    # include cuda sdk paths
+    include_directories("${CUDA_INCLUDE_DIRS}")
+    link_directories(${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+
+    # tampoline
+    include_directories(tbd/)
+
+    set(LIB_SU_GPU_NTT NTT_Library)
+    set(LIB_SU_GPU_NTT_DEPS "-lcuda -lcudart")
+
+    #= Targets and Misc.
+    add_executable(su-gpuntt src/core/extras/su-gpuntt.cu)
+    target_compile_definitions(su-gpuntt PRIVATE BARRETT_64)
+    target_link_libraries(su-gpuntt PRIVATE NTT_Library)
+
+    #cpp target
+    add_executable(su-gpuntt-cpp tbd/su-gpu-ntt.cpp)
+
+    set_target_properties(su-gpuntt-cpp PROPERTIES
+                                CMAKE_CUDA_STANDARD 17
+                                POSITION_INDEPENDENT_CODE ON
+                                CUDA_SEPARABLE_COMPILATION ON
+                                CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+    target_compile_definitions(su-gpuntt-cpp PRIVATE BARRETT_64 )
+    target_link_libraries(su-gpuntt-cpp PRIVATE NTT_Library)
+
+endif()
+
 ### Handle third-party CEREAL
 include_directories( ${THIRDPARTYDIR}/cereal/include )
 install(DIRECTORY ${THIRDPARTYDIR}/cereal/include/ DESTINATION include/openfhe)
@@ -641,6 +711,11 @@ if(WITH_NTL)
     list(APPEND THIRDPARTYSTATICLIBS "gmp")
 endif()
 
+if (WITH_INTEL_HEXL)
+    list(APPEND THIRDPARTYLIBS "HEXL::hexl")
+    list(APPEND THIRDPARTYSTATICLIBS "HEXL::hexl")
+endif()
+
 set(DEMODATAPATH ${CMAKE_CURRENT_SOURCE_DIR}/demoData)
 set(BINDEMODATAPATH ${CMAKE_CURRENT_BINARY_DIR}/demoData)
 
@@ -711,7 +786,7 @@ export(PACKAGE OpenFHE)
 
 # Create the OpenFHEConfig.cmake and OpenFHEConfigVersion files
 file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
-   "${INSTALL_INCLUDE_DIR}")
+  "${INSTALL_INCLUDE_DIR}")
 # ... for the build tree
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 configure_file(OpenFHEConfig.cmake.in
@@ -733,3 +808,5 @@ install(FILES
 # Install the export set for use with the install-tree
 install(EXPORT OpenFHETargets DESTINATION
   "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+
+#============================ [End] =============================#

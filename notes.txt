@@ -1,0 +1,31 @@
+# OpenFHE v1.1.1
+- CPU NTT/iNTT with intel HEXL
+- GPU supported NTT/iNTT with SU code
+
+# Build and Install
+mkdir bbuild && cd $_
+rake openfhe:cmake_configure[`pwd`]
+rake openfhe:make_install[`pwd`]
+
+
+# Unittesting result
+echo core: && unittest/core_tests -t || true
+core:
+Testing Backends: 4 Native 
+****** OpenFHE Version 1.1.1
+****** Date 2024-03-11T12:30:39
+****** End 157 cases 157 passed 0 failed
+echo pke: && unittest/pke_tests -t || true
+pke:
+Testing Backends: 4 Native 
+****** OpenFHE Version 1.1.1
+****** Date 2024-03-11T12:31:04
+****** End 1489 cases 1489 passed 0 failed
+echo binfhe: && unittest/binfhe_tests -t
+binfhe:
+Testing Backends: 4 Native 
+****** OpenFHE Version 1.1.1
+****** Date 2024-03-11T12:46:40
+****** End 84 cases 84 passed 0 failed
+
+#=

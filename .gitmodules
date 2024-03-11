@@ -10,3 +10,9 @@
 [submodule "third-party/cereal"]
 	path = third-party/cereal
 	url = https://github.com/openfheorg/cereal.git
+[submodule "third-party/intel-hexl"]
+	path = third-party/intel-hexl/checkout
+	url = ""
+[submodule "third-party/suacc/gpu"]
+	path = third-party/suacc/gpu
+	url = https://github.com/Alisah-Ozcan/GPU-NTT.git

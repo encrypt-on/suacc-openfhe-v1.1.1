@@ -18,6 +18,17 @@ set(BINFHE_VERSION ${BINFHE_VERSION_MAJOR}.${BINFHE_VERSION_MINOR}.${BINFHE_VERS
 add_library(binfheobj OBJECT ${BINFHE_SRC_FILES})
 set_property(TARGET binfheobj PROPERTY POSITION_INDEPENDENT_CODE 1)
 
+#704:: added following block
+if(WITH_SU_GPU_NTT)
+	set_target_properties(binfheobj PROPERTIES
+									CMAKE_CUDA_STANDARD 17
+									POSITION_INDEPENDENT_CODE ON
+									CUDA_SEPARABLE_COMPILATION ON
+									CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+	target_compile_definitions(binfheobj PRIVATE BARRETT_64 )
+	add_dependencies(binfheobj ${LIB_SU_GPU_NTT})
+endif()
+
 if ( BUILD_SHARED )
 	add_dependencies(binfheobj OPENFHEcore)
 	add_library (OPENFHEbinfhe SHARED $<TARGET_OBJECTS:binfheobj>)
@@ -59,7 +70,13 @@ if( BUILD_UNITTESTS )
 	file (GLOB BINFHE_TEST_SRC_FILES CONFIGURE_DEPENDS unittest/*.cpp)
 	add_executable (binfhe_tests ${BINFHE_TEST_SRC_FILES} ${UNITTESTMAIN})
 	set_property(TARGET binfhe_tests PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/unittest)
-	target_link_libraries ( binfhe_tests ${BINFHELIBS})
+	
+	if(WITH_SU_GPU_NTT)
+		target_link_libraries ( binfhe_tests ${BINFHELIBS} ${LIB_SU_GPU_NTT} ${LIB_SU_GPU_NTT_DEPS})
+	else()
+		target_link_libraries ( binfhe_tests ${BINFHELIBS})
+	endif()
+	
 	if (NOT ${WITH_OPENMP})
 		target_link_libraries ( binfhe_tests PRIVATE Threads::Threads)
 	endif()
@@ -78,7 +95,11 @@ if( BUILD_EXAMPLES)
 		add_executable ( ${exe} ${app} )
 		set_property(TARGET ${exe} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples/binfhe)
 		set( BINFHEAPPS ${BINFHEAPPS} ${exe} )
-		target_link_libraries ( ${exe} ${BINFHELIBS} )
+		if(WITH_SU_GPU_NTT)
+			target_link_libraries ( ${exe} ${BINFHELIBS} ${LIB_SU_GPU_NTT} ${LIB_SU_GPU_NTT_DEPS})
+		else()
+			target_link_libraries ( ${exe} ${BINFHELIBS})
+		endif()
 	endforeach()
 
 	file (GLOB BINFHE_EXAMPLES_SRC_FILES CONFIGURE_DEPENDS examples/pke/*.cpp)
@@ -87,7 +108,11 @@ if( BUILD_EXAMPLES)
 		add_executable ( ${exe} ${app} )
 		set_property(TARGET ${exe} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples/binfhe/pke)
 		set( BINFHEAPPS ${BINFHEAPPS} ${exe} )
-		target_link_libraries ( ${exe} ${BINFHELIBS} )
+		if(WITH_SU_GPU_NTT)
+			target_link_libraries ( ${exe} ${BINFHELIBS} ${LIB_SU_GPU_NTT} ${LIB_SU_GPU_NTT_DEPS})
+		else()
+			target_link_libraries ( ${exe} ${BINFHELIBS})
+		endif()
 	endforeach()
 
 	add_custom_target( allbinfheexamples )
