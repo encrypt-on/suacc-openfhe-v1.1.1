@@ -1,9 +1,3 @@
-[submodule "third-party/google-benchmark"]
-	path = third-party/google-benchmark
-	url = https://github.com/google/benchmark.git
-[submodule "third-party/google-test"]
-	path = third-party/google-test
-	url = https://github.com/google/googletest.git
 [submodule "third-party/gperftools"]
 	path = third-party/gperftools
 	url = https://github.com/gperftools/gperftools.git
@@ -13,6 +7,3 @@
 [submodule "third-party/intel-hexl"]
 	path = third-party/intel-hexl/checkout
 	url = https://github.com/intel/hexl.git
-[submodule "third-party/suacc/gpu"]
-	path = third-party/suacc/gpu
-	url = https://github.com/Alisah-Ozcan/GPU-NTT.git
