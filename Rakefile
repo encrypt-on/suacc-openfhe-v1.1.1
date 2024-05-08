@@ -19,7 +19,7 @@ namespace :openfhe do
 
     Dir.chdir(current_directory) do
       rpath = Pathname.new(current_directory).relative_path_from(project_root)
-      abort "[Error] '#{rpath}' didn't find **/bbuild/ " unless rpath.to_s =~ /(?:^|\/)bbuild(?:\/|$)/
+#      abort "[Error] '#{rpath}' didn't find **/bbuild/ " unless rpath.to_s =~ /(?:^|\/)bbuild(?:\/|$)/
       abort "[Error] '#{current_directory}' is not empty. Empty it first!" unless Dir.empty?(current_directory)
       cmake_opts = [ 
           "-DCMAKE_BUILD_TYPE=Debug", 
