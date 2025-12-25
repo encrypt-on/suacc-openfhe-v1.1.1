@@ -1,3 +1,19 @@
+SU Accelerated OpenFHE
+=======================
+This repository is a fork of OpenFHE (v1.1.1) that has been extended with GPU-accelerated Forward and Inverse NTT operations by the development team at SU. The work was carried out as part of WP4 of the enCRYPTON project. To build and install this fork, follow the steps below:
+
+```bash
+git clone --depth=1 https://github.com/encrypt-on/suacc-openfhe-v1.1.1.git suacc-openfhe-v1.1.1_another
+cd suacc-openfhe-v1.1.1_another
+git submodule update --init
+mkdir bbuild && cd bbuild
+rake openfhe:cmake_configure[pwd]
+make -j12
+make install
+```
+
+All remaining content of this README is inherited unchanged from the original OpenFHE repository, presented as follows:
+
 OpenFHE - Open-Source Fully Homomorphic Encryption Library
 =====================================
 
